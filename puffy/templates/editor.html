@@ -1,0 +1,108 @@
+<div class="grid">
+    <div class="col">
+        <figure id="image-preview">
+            <img src="/static/{{ image_id }}" alt="{{ alt_text | default('uploaded image') }}" />
+            <figcaption>Image Preview</figcaption>
+        </figure>
+    </div>
+    <div class="col">
+        <div id="controls">
+            <form hx-post="/resize" hx-target="#image-editor" hx-swap="innerHTML">
+                <input type="hidden" name="image_id" value="{{ image_id }}">
+                <div class="grid">
+                    <input type="number" name="width" placeholder="Width" value="{{ width | default('') }}" required>
+                    <input type="number" name="height" placeholder="Height" value="{{ height | default('') }}" required>
+                </div>
+                <select name="interpolation">
+                    <option value="bicubic" {% if interpolation == 'bicubic' %}selected{% endif %}>Bicubic</option>
+                    <option value="bilinear" {% if interpolation == 'bilinear' %}selected{% endif %}>Bilinear</option>
+                    <option value="nearest" {% if interpolation == 'nearest' %}selected{% endif %}>Nearest Neighbor</option>
+                </select>
+                <button type="submit">Resize</button>
+            </form>
+            <form hx-post="/crop" hx-target="#image-editor" hx-swap="innerHTML">
+                <input type="hidden" name="image_id" value="{{ image_id }}">
+                <div class="grid">
+                    <input type="number" name="x" placeholder="X" value="{{ x | default('') }}" required>
+                    <input type="number" name="y" placeholder="Y" value="{{ y | default('') }}" required>
+                    <input type="number" name="width" placeholder="Width" value="{{ crop_width | default('') }}" required>
+                    <input type="number" name="height" placeholder="Height" value="{{ crop_height | default('') }}" required>
+                </div>
+                <button type="submit">Crop</button>
+            </form>
+            <form hx-post="/flip" hx-target="#image-editor" hx-swap="innerHTML">
+                <input type="hidden" name="image_id" value="{{ image_id }}">
+                <fieldset>
+                    <label>
+                        <input type="checkbox" name="direction" value="horizontal" {% if 'horizontal' in direction %}checked{% endif %}>
+                        Horizontal
+                    </label>
+                    <label>
+                        <input type="checkbox" name="direction" value="vertical" {% if 'vertical' in direction %}checked{% endif %}>
+                        Vertical
+                    </label>
+                </fieldset>
+                <button type="submit">Flip</button>
+            </form>
+            <form hx-post="/rotate" hx-target="#image-editor" hx-swap="innerHTML">
+                <input type="hidden" name="image_id" value="{{ image_id }}">
+                <input type="number" name="angle" placeholder="Angle" value="{{ angle | default('') }}" required>
+                <div class="grid">
+                    <input type="number" name="center_x" placeholder="Center X (optional)" value="{{ center_x | default('') }}">
+                    <input type="number" name="center_y" placeholder="Center Y (optional)" value="{{ center_y | default('') }}">
+                </div>
+                <button type="submit">Rotate</button>
+            </form>
+            <form hx-post="/adjust-brightness-contrast" hx-target="#image-editor" hx-swap="innerHTML">
+                <input type="hidden" name="image_id" value="{{ image_id }}">
+                <label for="brightness">Brightness</label>
+                <input type="range" id="brightness" name="brightness" min="-100" max="100" value="{{ brightness | default(0) }}">
+                <label for="contrast">Contrast</label>
+                <input type="range" id="contrast" name="contrast" min="0.5" max="2.5" step="0.1" value="{{ contrast | default(1.0) }}">
+                <button type="submit">Adjust</button>
+            </form>
+            <form hx-post="/adjust-color-balance" hx-target="#image-editor" hx-swap="innerHTML">
+                <input type="hidden" name="image_id" value="{{ image_id }}">
+                <label for="red">Red</label>
+                <input type="range" id="red" name="red" min="-100" max="100" value="{{ red | default(0) }}">
+                <label for="green">Green</label>
+                <input type="range" id="green" name="green" min="-100" max="100" value="{{ green | default(0) }}">
+                <label for="blue">Blue</label>
+                <input type="range" id="blue" name="blue" min="-100" max="100" value="{{ blue | default(0) }}">
+                <button type="submit">Adjust Colors</button>
+            </form>
+            <form hx-post="/add-noise" hx-target="#image-editor" hx-swap="innerHTML">
+                <input type="hidden" name="image_id" value="{{ image_id }}">
+                <select name="noise_type">
+                    <option value="gaussian" {% if noise_type == 'gaussian' %}selected{% endif %}>Gaussian</option>
+                    <option value="salt_pepper" {% if noise_type == 'salt_pepper' %}selected{% endif %}>Salt & Pepper</option>
+                </select>
+                <label for="intensity">Intensity</label>
+                <input type="range" id="intensity" name="intensity" min="0.01" max="1.0" step="0.01" value="{{ intensity | default(0.1) }}">
+                <button type="submit">Add Noise</button>
+            </form>
+            <form hx-post="/blur" hx-target="#image-editor" hx-swap="innerHTML">
+                <input type="hidden" name="image_id" value="{{ image_id }}">
+                <select name="blur_type">
+                    <option value="gaussian" {% if blur_type == 'gaussian' %}selected{% endif %}>Gaussian</option>
+                    <option value="average" {% if blur_type == 'average' %}selected{% endif %}>Average</option>
+                    <option value="median" {% if blur_type == 'median' %}selected{% endif %}>Median</option>
+                </select>
+                <label for="kernel_size">Kernel Size</label>
+                <input type="number" id="kernel_size" name="kernel_size" min="1" step="2" value="{{ kernel_size | default(5) }}">
+                <button type="submit">Blur</button>
+            </form>
+            <form hx-post="/download" hx-target="_blank">
+                <input type="hidden" name="image_id" value="{{ image_id }}">
+                <select name="format">
+                    <option value="jpeg">JPEG</option>
+                    <option value="png">PNG</option>
+                    <option value="tiff">TIFF</option>
+                </select>
+                <label for="quality">Quality (JPEG)</label>
+                <input type="range" id="quality" name="quality" min="1" max="100" value="95">
+                <button type="submit">Download</button>
+            </form>
+        </div>
+    </div>
+</div>
