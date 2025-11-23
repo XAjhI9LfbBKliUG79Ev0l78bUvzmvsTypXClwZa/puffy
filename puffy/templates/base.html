@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta name="color-scheme" content="light dark">
+  <title>{% block title %}Puffy{% endblock %}</title>
+  <link rel="stylesheet" href="pico-main/css/pico.min.css">
+</head>
+<body>
+  <header>
+	  <!-- <nav>semantic nav markup</nav> -->
+  </header>
+
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer>{% block footer %}{% endblock %}</footer>
+
+  <!-- {% block scripts %}{% endblock %} -->
+</body>
+</html>
