@@ -321,7 +321,6 @@ dependencies = [
     { name = "fastapi" },
     { name = "jinja2" },
     { name = "numpy" },
-    { name = "ty" },
 ]
 
 [package.dev-dependencies]
@@ -329,6 +328,7 @@ dev = [
     { name = "jedi-language-server" },
     { name = "python-lsp-server" },
     { name = "ruff" },
+    { name = "ty" },
 ]
 
 [package.metadata]
@@ -336,7 +336,6 @@ requires-dist = [
     { name = "fastapi", specifier = ">=0.121.2" },
     { name = "jinja2", specifier = ">=3.1.6" },
     { name = "numpy", specifier = ">=2.3.5" },
-    { name = "ty", specifier = ">=0.0.1a26" },
 ]
 
 [package.metadata.requires-dev]
@@ -344,6 +343,7 @@ dev = [
     { name = "jedi-language-server", specifier = ">=0.46.0" },
     { name = "python-lsp-server", specifier = ">=1.13.1" },
     { name = "ruff", specifier = ">=0.14.3" },
+    { name = "ty", specifier = ">=0.0.1a26" },
 ]
 
 [[package]]
