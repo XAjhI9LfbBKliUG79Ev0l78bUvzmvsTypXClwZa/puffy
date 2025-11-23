@@ -1,6 +1,5 @@
 from typing import TypeAlias
-
+from numpy.typing import NDArray
 import numpy as np
-import numpy.typing as npt
 
-ImageArray: TypeAlias = npt.NDArray[np.uint8]
+ImageArray: TypeAlias = NDArray[np.uint8]
