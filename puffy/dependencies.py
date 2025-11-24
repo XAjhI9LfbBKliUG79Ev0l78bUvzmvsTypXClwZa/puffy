@@ -16,8 +16,10 @@ class ImageFileHandler:
     def __init__(self, image_id: str = Form(...)):
         self.image_id = image_id
         self.original_path = UPLOAD_DIR / self.image_id
-        if not is_safe_path(UPLOAD_DIR, self.original_path):
-            raise HTTPException(status_code=400, detail="Invalid file path.")
+        if not is_safe_path(UPLOAD_DIR, self.original_path) or not self.original_path.is_file():
+            raise HTTPException(status_code=404, detail="Image not found.")
+
+        self.editor = ImageEditor.open(self.original_path)
 
     def get_new_path(self) -> Path:
         ext = self.original_path.suffix

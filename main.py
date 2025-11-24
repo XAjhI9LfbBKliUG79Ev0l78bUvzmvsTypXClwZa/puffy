@@ -8,6 +8,7 @@ import uuid
 import os
 from puffy.core.editor import ImageEditor
 from puffy.dependencies import ImageFileHandler
+from puffy.handlers import process_image_and_save
 from typing import Optional, List
 
 app = FastAPI()
@@ -51,11 +52,13 @@ async def resize_image(
     interpolation: str = Form("bicubic"),
     handler: ImageFileHandler = Depends(ImageFileHandler)
 ):
-    new_path = handler.get_new_path()
-    editor = ImageEditor.open(handler.original_path)
-    editor.resize(width, height, interpolation=interpolation)
-    editor.save(new_path)
-    handler.cleanup()
+    new_path = process_image_and_save(
+        handler,
+        ImageEditor.resize,
+        width=width,
+        height=height,
+        interpolation=interpolation,
+    )
     context = {
         "request": request,
         "image_id": new_path.name,
@@ -75,12 +78,15 @@ async def crop_image(
     height: int = Form(..., gt=0),
     handler: ImageFileHandler = Depends(ImageFileHandler)
 ):
-    new_path = handler.get_new_path()
     try:
-        editor = ImageEditor.open(handler.original_path)
-        editor.crop(x, y, width, height)
-        editor.save(new_path)
-        handler.cleanup()
+        new_path = process_image_and_save(
+            handler,
+            ImageEditor.crop,
+            x=x,
+            y=y,
+            width=width,
+            height=height,
+        )
         context = {
             "request": request,
             "image_id": new_path.name,
@@ -103,14 +109,14 @@ async def flip_image(
     if not direction:
         return templates.TemplateResponse("editor.html", {"request": request, "image_id": handler.image_id, "alt_text": "flipped none", "direction": []})
 
-    new_path = handler.get_new_path()
     horizontal = "horizontal" in direction
     vertical = "vertical" in direction
-
-    editor = ImageEditor.open(handler.original_path)
-    editor.flip(horizontal=horizontal, vertical=vertical)
-    editor.save(new_path)
-    handler.cleanup()
+    new_path = process_image_and_save(
+        handler,
+        ImageEditor.flip,
+        horizontal=horizontal,
+        vertical=vertical,
+    )
     context = {
         "request": request,
         "image_id": new_path.name,
@@ -127,12 +133,13 @@ async def rotate_image(
     center_y: Optional[int] = Form(None),
     handler: ImageFileHandler = Depends(ImageFileHandler)
 ):
-    new_path = handler.get_new_path()
     center = (center_x, center_y) if center_x is not None and center_y is not None else None
-    editor = ImageEditor.open(handler.original_path)
-    editor.rotate(angle, center=center)
-    editor.save(new_path)
-    handler.cleanup()
+    new_path = process_image_and_save(
+        handler,
+        ImageEditor.rotate,
+        angle=angle,
+        center=center,
+    )
     context = {
         "request": request,
         "image_id": new_path.name,
@@ -150,11 +157,12 @@ async def adjust_brightness_contrast(
     contrast: float = Form(1.0),
     handler: ImageFileHandler = Depends(ImageFileHandler)
 ):
-    new_path = handler.get_new_path()
-    editor = ImageEditor.open(handler.original_path)
-    editor.adjust_brightness_contrast(brightness=brightness, contrast=contrast)
-    editor.save(new_path)
-    handler.cleanup()
+    new_path = process_image_and_save(
+        handler,
+        ImageEditor.adjust_brightness_contrast,
+        brightness=brightness,
+        contrast=contrast,
+    )
     context = {
         "request": request,
         "image_id": new_path.name,
@@ -172,11 +180,13 @@ async def adjust_color_balance(
     blue: int = Form(0),
     handler: ImageFileHandler = Depends(ImageFileHandler)
 ):
-    new_path = handler.get_new_path()
-    editor = ImageEditor.open(handler.original_path)
-    editor.adjust_color_balance(red=red, green=green, blue=blue)
-    editor.save(new_path)
-    handler.cleanup()
+    new_path = process_image_and_save(
+        handler,
+        ImageEditor.adjust_color_balance,
+        red=red,
+        green=green,
+        blue=blue,
+    )
     context = {
         "request": request,
         "image_id": new_path.name,
@@ -194,11 +204,12 @@ async def add_noise(
     intensity: float = Form(0.1),
     handler: ImageFileHandler = Depends(ImageFileHandler)
 ):
-    new_path = handler.get_new_path()
-    editor = ImageEditor.open(handler.original_path)
-    editor.add_noise(noise_type=noise_type, intensity=intensity)
-    editor.save(new_path)
-    handler.cleanup()
+    new_path = process_image_and_save(
+        handler,
+        ImageEditor.add_noise,
+        noise_type=noise_type,
+        intensity=intensity,
+    )
     context = {
         "request": request,
         "image_id": new_path.name,
@@ -215,11 +226,12 @@ async def blur(
     kernel_size: int = Form(5, gt=0),
     handler: ImageFileHandler = Depends(ImageFileHandler)
 ):
-    new_path = handler.get_new_path()
-    editor = ImageEditor.open(handler.original_path)
-    editor.blur(blur_type=blur_type, kernel_size=kernel_size)
-    editor.save(new_path)
-    handler.cleanup()
+    new_path = process_image_and_save(
+        handler,
+        ImageEditor.blur,
+        blur_type=blur_type,
+        kernel_size=kernel_size,
+    )
     context = {
         "request": request,
         "image_id": new_path.name,
@@ -238,14 +250,12 @@ async def download_image(
     handler: ImageFileHandler = Depends(ImageFileHandler)
 ):
     ext = f".{format.lower()}"
-    # Create a temporary path for the download
     download_id = f"{uuid.uuid4()}{ext}"
     download_path = UPLOAD_DIR / download_id
 
     editor = ImageEditor.open(handler.original_path)
     editor.save(download_path, quality=quality)
 
-    # Schedule the cleanup of the temporary file
     background_tasks.add_task(cleanup_file, download_path)
 
     return FileResponse(download_path, media_type=f"image/{format}", filename=f"edited_image{ext}")
