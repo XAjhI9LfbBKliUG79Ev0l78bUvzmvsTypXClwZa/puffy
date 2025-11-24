@@ -1,6 +1,8 @@
+
 import cv2
+import numpy as np
+
 from .types import ImageArray
-from typing import Optional
 
 
 def resize(
@@ -13,8 +15,8 @@ def resize(
         "bicubic": cv2.INTER_CUBIC,
     }
     interpolation_flag = inter_map.get(interpolation, cv2.INTER_CUBIC)
-    return ImageArray(
-        cv2.resize(image, (width, height), interpolation=interpolation_flag)
+    return cv2.resize(image, (width, height), interpolation=interpolation_flag).astype(
+        np.uint8
     )
 
 
@@ -22,7 +24,7 @@ def crop(image: ImageArray, x: int, y: int, width: int, height: int) -> ImageArr
     """Crops an image to a specified rectangle."""
     if x < 0 or y < 0 or x + width > image.shape[1] or y + height > image.shape[0]:
         raise ValueError("Crop coordinates are out of bounds")
-    return ImageArray(image[y : y + height, x : x + width])
+    return image[y : y + height, x : x + width]
 
 
 def flip(
@@ -37,11 +39,11 @@ def flip(
         flip_code = 0
     else:
         return image
-    return ImageArray(cv2.flip(image, flip_code))
+    return cv2.flip(image, flip_code).astype(np.uint8)
 
 
 def rotate(
-    image: ImageArray, angle: float, center: Optional[tuple[int, int]] = None
+    image: ImageArray, angle: float, center: tuple[int, int] | None = None
 ) -> ImageArray:
     """Rotates an image by a specified angle and center."""
     (h, w) = image.shape[:2]
@@ -49,4 +51,4 @@ def rotate(
         center = (w // 2, h // 2)
 
     M = cv2.getRotationMatrix2D(center, angle, 1.0)
-    return ImageArray(cv2.warpAffine(image, M, (w, h)))
+    return cv2.warpAffine(image, M, (w, h)).astype(np.uint8)

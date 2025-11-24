@@ -1,15 +1,25 @@
-from fastapi import APIRouter, Request, Form, UploadFile, File, Depends, BackgroundTasks
-from fastapi.responses import HTMLResponse, FileResponse
-from fastapi.templating import Jinja2Templates
-from pathlib import Path
+import os
 import shutil
 import uuid
-import os
+from pathlib import Path
+from typing import List
+
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    File,
+    Form,
+    Request,
+    UploadFile,
+)
+from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.templating import Jinja2Templates
+
+from puffy.config import UPLOAD_DIR
 from puffy.core.editor import ImageEditor
 from puffy.dependencies import ImageFileHandler
 from puffy.handlers import process_image_and_save
-from typing import Optional, List
-from puffy.config import UPLOAD_DIR
 
 router = APIRouter()
 templates = Jinja2Templates(
@@ -24,11 +34,15 @@ def cleanup_file(path: Path):
 
 @router.post("/upload", response_class=HTMLResponse)
 async def upload_file(request: Request, file: UploadFile = File(...)):
+    if file.filename is None:
+        return templates.TemplateResponse(
+            request, "error.html", {"message": "Invalid file upload."}
+        )
     allowed_extensions = {".jpg", ".jpeg", ".png", ".gif", ".tiff"}
     ext = Path(file.filename).suffix.lower()
     if ext not in allowed_extensions:
         return templates.TemplateResponse(
-            "error.html", {"request": request, "message": "Unsupported file format."}
+            request, "error.html", {"message": "Unsupported file format."}
         )
 
     image_id = f"{uuid.uuid4()}{ext}"
@@ -38,8 +52,9 @@ async def upload_file(request: Request, file: UploadFile = File(...)):
         shutil.copyfileobj(file.file, buffer)
 
     return templates.TemplateResponse(
+        request,
         "editor.html",
-        {"request": request, "image_id": image_id, "alt_text": "uploaded image"},
+        {"image_id": image_id, "alt_text": "uploaded image"},
     )
 
 
@@ -59,14 +74,13 @@ async def resize_image(
         interpolation=interpolation,
     )
     context = {
-        "request": request,
         "image_id": new_path.name,
         "alt_text": f"resized image ({width}x{height})",
         "width": width,
         "height": height,
         "interpolation": interpolation,
     }
-    return templates.TemplateResponse("editor.html", context)
+    return templates.TemplateResponse(request, "editor.html", context)
 
 
 @router.post("/crop", response_class=HTMLResponse)
@@ -88,7 +102,6 @@ async def crop_image(
             height=height,
         )
         context = {
-            "request": request,
             "image_id": new_path.name,
             "alt_text": f"cropped image ({width}x{height} at {x},{y})",
             "x": x,
@@ -96,24 +109,24 @@ async def crop_image(
             "crop_width": width,
             "crop_height": height,
         }
-        return templates.TemplateResponse("editor.html", context)
+        return templates.TemplateResponse(request, "editor.html", context)
     except ValueError as e:
         return templates.TemplateResponse(
-            "error.html", {"request": request, "message": str(e)}
+            request, "error.html", {"message": str(e)}
         )
 
 
 @router.post("/flip", response_class=HTMLResponse)
 async def flip_image(
     request: Request,
-    direction: List[str] = Form(default=[]),
+    direction: list[str] = Form(default=[]),
     handler: ImageFileHandler = Depends(ImageFileHandler),
 ):
     if not direction:
         return templates.TemplateResponse(
+            request,
             "editor.html",
             {
-                "request": request,
                 "image_id": handler.image_id,
                 "alt_text": "flipped none",
                 "direction": [],
@@ -129,20 +142,19 @@ async def flip_image(
         vertical=vertical,
     )
     context = {
-        "request": request,
         "image_id": new_path.name,
         "alt_text": f"flipped {', '.join(direction) if direction else 'none'}",
         "direction": direction,
     }
-    return templates.TemplateResponse("editor.html", context)
+    return templates.TemplateResponse(request, "editor.html", context)
 
 
 @router.post("/rotate", response_class=HTMLResponse)
 async def rotate_image(
     request: Request,
     angle: float = Form(...),
-    center_x: Optional[int] = Form(None),
-    center_y: Optional[int] = Form(None),
+    center_x: int | None = Form(None),
+    center_y: int | None = Form(None),
     handler: ImageFileHandler = Depends(ImageFileHandler),
 ):
     center = (
@@ -155,14 +167,13 @@ async def rotate_image(
         center=center,
     )
     context = {
-        "request": request,
         "image_id": new_path.name,
         "alt_text": f"rotated image ({angle} degrees)",
         "angle": angle,
         "center_x": center_x,
         "center_y": center_y,
     }
-    return templates.TemplateResponse("editor.html", context)
+    return templates.TemplateResponse(request, "editor.html", context)
 
 
 @router.post("/adjust-brightness-contrast", response_class=HTMLResponse)
@@ -179,13 +190,12 @@ async def adjust_brightness_contrast(
         contrast=contrast,
     )
     context = {
-        "request": request,
         "image_id": new_path.name,
         "alt_text": "brightness/contrast adjusted",
         "brightness": brightness,
         "contrast": contrast,
     }
-    return templates.TemplateResponse("editor.html", context)
+    return templates.TemplateResponse(request, "editor.html", context)
 
 
 @router.post("/adjust-color-balance", response_class=HTMLResponse)
@@ -204,14 +214,13 @@ async def adjust_color_balance(
         blue=blue,
     )
     context = {
-        "request": request,
         "image_id": new_path.name,
         "alt_text": "color balance adjusted",
         "red": red,
         "green": green,
         "blue": blue,
     }
-    return templates.TemplateResponse("editor.html", context)
+    return templates.TemplateResponse(request, "editor.html", context)
 
 
 @router.post("/add-noise", response_class=HTMLResponse)
@@ -228,13 +237,12 @@ async def add_noise(
         intensity=intensity,
     )
     context = {
-        "request": request,
         "image_id": new_path.name,
         "alt_text": f"{noise_type} noise added",
         "noise_type": noise_type,
         "intensity": intensity,
     }
-    return templates.TemplateResponse("editor.html", context)
+    return templates.TemplateResponse(request, "editor.html", context)
 
 
 @router.post("/blur", response_class=HTMLResponse)
@@ -251,13 +259,12 @@ async def blur(
         kernel_size=kernel_size,
     )
     context = {
-        "request": request,
         "image_id": new_path.name,
         "alt_text": f"{blur_type} blur applied",
         "blur_type": blur_type,
         "kernel_size": kernel_size,
     }
-    return templates.TemplateResponse("editor.html", context)
+    return templates.TemplateResponse(request, "editor.html", context)
 
 
 @router.post("/download")

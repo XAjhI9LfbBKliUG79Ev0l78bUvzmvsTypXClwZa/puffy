@@ -1,5 +1,8 @@
 from pathlib import Path
+
 import cv2
+import numpy as np
+
 from .types import ImageArray
 
 
@@ -8,16 +11,16 @@ def load_image(path: str | Path) -> ImageArray:
     image = cv2.imread(str(path))
     if image is None:
         raise FileNotFoundError(f"Image not found at {path}")
-    return ImageArray(image)
+    return image.astype(np.uint8)
 
 
 def save_image(image: ImageArray, path: str | Path, quality: int = 95) -> None:
-    """Saves an image to the specified path with optional quality settings for JPEG."""
+    """Saves an image to the specified path."""
     ext = Path(path).suffix.lower()
-    if ext in [".jpg", ".jpeg"]:
+    if ext == ".jpeg" or ext == ".jpg":
         params = [cv2.IMWRITE_JPEG_QUALITY, quality]
         if not cv2.imwrite(str(path), image, params):
-            raise IOError(f"Could not save JPEG image to {path}")
+            raise OSError(f"Could not save JPEG image to {path}")
     else:
         if not cv2.imwrite(str(path), image):
-            raise IOError(f"Could not save image to {path}")
+            raise OSError(f"Could not save image to {path}")

@@ -1,5 +1,6 @@
-import numpy as np
 import cv2
+import numpy as np
+
 from .types import ImageArray
 
 
@@ -14,18 +15,22 @@ def add_noise(
         sigma = var**0.5
         gauss = np.random.normal(mean, sigma, (h, w, c))
         noisy = np.clip(image + gauss, 0, 255)
-        return ImageArray(noisy.astype(np.uint8))
+        return noisy.astype(np.uint8)
     elif noise_type == "salt_pepper":
         noisy = np.copy(image)
         # Salt
         num_salt = np.ceil(intensity * image.size * 0.5)
-        coords = [np.random.randint(0, i, int(num_salt)) for i in image.shape]
+        coords = [
+            np.random.randint(0, i, int(num_salt)) for i in image.shape
+        ]
         noisy[coords[0], coords[1], :] = 255
         # Pepper
         num_pepper = np.ceil(intensity * image.size * 0.5)
-        coords = [np.random.randint(0, i, int(num_pepper)) for i in image.shape]
+        coords = [
+            np.random.randint(0, i, int(num_pepper)) for i in image.shape
+        ]
         noisy[coords[0], coords[1], :] = 0
-        return ImageArray(noisy)
+        return noisy.astype(np.uint8)
     return image
 
 
@@ -38,9 +43,11 @@ def blur(
         kernel_size += 1
 
     if blur_type == "average":
-        return ImageArray(cv2.blur(image, (kernel_size, kernel_size)))
+        return cv2.blur(image, (kernel_size, kernel_size)).astype(np.uint8)
     elif blur_type == "gaussian":
-        return ImageArray(cv2.GaussianBlur(image, (kernel_size, kernel_size), 0))
+        return cv2.GaussianBlur(image, (kernel_size, kernel_size), 0).astype(
+            np.uint8
+        )
     elif blur_type == "median":
-        return ImageArray(cv2.medianBlur(image, kernel_size))
+        return cv2.medianBlur(image, kernel_size).astype(np.uint8)
     return image

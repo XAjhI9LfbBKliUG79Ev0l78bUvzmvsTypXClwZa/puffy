@@ -1,8 +1,10 @@
-from fastapi import APIRouter, Request, Form
-from fastapi.responses import RedirectResponse, FileResponse
 import uuid
-from puffy.core.vector.editor import VectorEditor
+
+from fastapi import APIRouter, Form, Request
+from fastapi.responses import FileResponse, RedirectResponse
+
 from puffy.config import UPLOAD_DIR
+from puffy.core.vector.editor import VectorEditor
 
 router = APIRouter()
 
