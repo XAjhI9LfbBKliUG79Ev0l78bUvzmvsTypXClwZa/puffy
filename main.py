@@ -1,8 +1,10 @@
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from pathlib import Path
-from puffy.routers import ui, vector, image
-from puffy.config import UPLOAD_DIR, BASE_DIR
+
+from puffy.config import BASE_DIR, UPLOAD_DIR
+from puffy.routers import image, ui, vector
 
 app = FastAPI()
 

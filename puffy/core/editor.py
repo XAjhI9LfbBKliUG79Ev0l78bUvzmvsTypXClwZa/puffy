@@ -1,11 +1,11 @@
 from __future__ import annotations
+
 import copy
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
 
+from . import adjustments, effects, io, transform
 from .types import ImageArray
-from . import io, transform, adjustments, effects
 
 
 @dataclass
@@ -33,7 +33,7 @@ class ImageEditor:
         return self
 
     def rotate(
-        self, angle: float, center: Optional[tuple[int, int]] = None
+        self, angle: float, center: tuple[int, int] | None = None
     ) -> ImageEditor:
         self._image = transform.rotate(self.image, angle, center)
         return self

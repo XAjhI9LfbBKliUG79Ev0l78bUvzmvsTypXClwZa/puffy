@@ -1,8 +1,8 @@
+from pathlib import Path
+
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
-from pathlib import Path
-from typing import Optional
 
 router = APIRouter()
 templates = Jinja2Templates(
@@ -12,11 +12,11 @@ templates = Jinja2Templates(
 
 @router.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse(request, "index.html")
 
 
 @router.get("/vector", response_class=HTMLResponse)
-async def vector_editor(request: Request, svg_id: Optional[str] = None):
+async def vector_editor(request: Request, svg_id: str | None = None):
     return templates.TemplateResponse(
-        "vector_editor.html", {"request": request, "svg_id": svg_id}
+        request, "vector_editor.html", {"svg_id": svg_id}
     )

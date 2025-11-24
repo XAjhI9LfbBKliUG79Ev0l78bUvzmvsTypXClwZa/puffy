@@ -1,7 +1,9 @@
-from fastapi import Form, HTTPException
-from pathlib import Path
-import uuid
 import os
+import uuid
+from pathlib import Path
+
+from fastapi import Form, HTTPException
+
 from .core.editor import ImageEditor
 
 BASE_DIR = Path(__file__).resolve().parent.parent
