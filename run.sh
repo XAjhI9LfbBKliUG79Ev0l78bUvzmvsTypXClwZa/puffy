@@ -5,7 +5,7 @@
     
     # TODO add choice to run either dev
     # or production mode, etc
-    ./your_service_command
+    uv run uvicorn main:app --host 0.0.0.0 --port 8000 > server.log 2>&1 &
 } || {
     echo "Build failed. Exiting..."
     exit 1

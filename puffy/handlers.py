@@ -3,6 +3,7 @@ from typing import Callable, Any
 
 from .dependencies import ImageFileHandler
 
+
 def process_image_and_save(
     handler: ImageFileHandler,
     operation: Callable[..., Any],

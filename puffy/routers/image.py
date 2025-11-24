@@ -12,18 +12,24 @@ from typing import Optional, List
 from puffy.config import UPLOAD_DIR
 
 router = APIRouter()
-templates = Jinja2Templates(directory=str(Path(__file__).resolve().parent.parent / 'templates'))
+templates = Jinja2Templates(
+    directory=str(Path(__file__).resolve().parent.parent / "templates")
+)
+
 
 def cleanup_file(path: Path):
     if path.exists():
         os.remove(path)
+
 
 @router.post("/upload", response_class=HTMLResponse)
 async def upload_file(request: Request, file: UploadFile = File(...)):
     allowed_extensions = {".jpg", ".jpeg", ".png", ".gif", ".tiff"}
     ext = Path(file.filename).suffix.lower()
     if ext not in allowed_extensions:
-        return templates.TemplateResponse("error.html", {"request": request, "message": "Unsupported file format."})
+        return templates.TemplateResponse(
+            "error.html", {"request": request, "message": "Unsupported file format."}
+        )
 
     image_id = f"{uuid.uuid4()}{ext}"
     save_path = UPLOAD_DIR / image_id
@@ -31,7 +37,11 @@ async def upload_file(request: Request, file: UploadFile = File(...)):
     with open(save_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
-    return templates.TemplateResponse("editor.html", {"request": request, "image_id": image_id, "alt_text": "uploaded image"})
+    return templates.TemplateResponse(
+        "editor.html",
+        {"request": request, "image_id": image_id, "alt_text": "uploaded image"},
+    )
+
 
 @router.post("/resize", response_class=HTMLResponse)
 async def resize_image(
@@ -39,7 +49,7 @@ async def resize_image(
     width: int = Form(..., gt=0),
     height: int = Form(..., gt=0),
     interpolation: str = Form("bicubic"),
-    handler: ImageFileHandler = Depends(ImageFileHandler)
+    handler: ImageFileHandler = Depends(ImageFileHandler),
 ):
     new_path = process_image_and_save(
         handler,
@@ -58,6 +68,7 @@ async def resize_image(
     }
     return templates.TemplateResponse("editor.html", context)
 
+
 @router.post("/crop", response_class=HTMLResponse)
 async def crop_image(
     request: Request,
@@ -65,7 +76,7 @@ async def crop_image(
     y: int = Form(..., ge=0),
     width: int = Form(..., gt=0),
     height: int = Form(..., gt=0),
-    handler: ImageFileHandler = Depends(ImageFileHandler)
+    handler: ImageFileHandler = Depends(ImageFileHandler),
 ):
     try:
         new_path = process_image_and_save(
@@ -87,16 +98,27 @@ async def crop_image(
         }
         return templates.TemplateResponse("editor.html", context)
     except ValueError as e:
-        return templates.TemplateResponse("error.html", {"request": request, "message": str(e)})
+        return templates.TemplateResponse(
+            "error.html", {"request": request, "message": str(e)}
+        )
+
 
 @router.post("/flip", response_class=HTMLResponse)
 async def flip_image(
     request: Request,
     direction: List[str] = Form(default=[]),
-    handler: ImageFileHandler = Depends(ImageFileHandler)
+    handler: ImageFileHandler = Depends(ImageFileHandler),
 ):
     if not direction:
-        return templates.TemplateResponse("editor.html", {"request": request, "image_id": handler.image_id, "alt_text": "flipped none", "direction": []})
+        return templates.TemplateResponse(
+            "editor.html",
+            {
+                "request": request,
+                "image_id": handler.image_id,
+                "alt_text": "flipped none",
+                "direction": [],
+            },
+        )
 
     horizontal = "horizontal" in direction
     vertical = "vertical" in direction
@@ -114,15 +136,18 @@ async def flip_image(
     }
     return templates.TemplateResponse("editor.html", context)
 
+
 @router.post("/rotate", response_class=HTMLResponse)
 async def rotate_image(
     request: Request,
     angle: float = Form(...),
     center_x: Optional[int] = Form(None),
     center_y: Optional[int] = Form(None),
-    handler: ImageFileHandler = Depends(ImageFileHandler)
+    handler: ImageFileHandler = Depends(ImageFileHandler),
 ):
-    center = (center_x, center_y) if center_x is not None and center_y is not None else None
+    center = (
+        (center_x, center_y) if center_x is not None and center_y is not None else None
+    )
     new_path = process_image_and_save(
         handler,
         ImageEditor.rotate,
@@ -139,12 +164,13 @@ async def rotate_image(
     }
     return templates.TemplateResponse("editor.html", context)
 
+
 @router.post("/adjust-brightness-contrast", response_class=HTMLResponse)
 async def adjust_brightness_contrast(
     request: Request,
     brightness: int = Form(0),
     contrast: float = Form(1.0),
-    handler: ImageFileHandler = Depends(ImageFileHandler)
+    handler: ImageFileHandler = Depends(ImageFileHandler),
 ):
     new_path = process_image_and_save(
         handler,
@@ -161,13 +187,14 @@ async def adjust_brightness_contrast(
     }
     return templates.TemplateResponse("editor.html", context)
 
+
 @router.post("/adjust-color-balance", response_class=HTMLResponse)
 async def adjust_color_balance(
     request: Request,
     red: int = Form(0),
     green: int = Form(0),
     blue: int = Form(0),
-    handler: ImageFileHandler = Depends(ImageFileHandler)
+    handler: ImageFileHandler = Depends(ImageFileHandler),
 ):
     new_path = process_image_and_save(
         handler,
@@ -186,12 +213,13 @@ async def adjust_color_balance(
     }
     return templates.TemplateResponse("editor.html", context)
 
+
 @router.post("/add-noise", response_class=HTMLResponse)
 async def add_noise(
     request: Request,
     noise_type: str = Form("gaussian"),
     intensity: float = Form(0.1),
-    handler: ImageFileHandler = Depends(ImageFileHandler)
+    handler: ImageFileHandler = Depends(ImageFileHandler),
 ):
     new_path = process_image_and_save(
         handler,
@@ -208,12 +236,13 @@ async def add_noise(
     }
     return templates.TemplateResponse("editor.html", context)
 
+
 @router.post("/blur", response_class=HTMLResponse)
 async def blur(
     request: Request,
     blur_type: str = Form("gaussian"),
     kernel_size: int = Form(5, gt=0),
-    handler: ImageFileHandler = Depends(ImageFileHandler)
+    handler: ImageFileHandler = Depends(ImageFileHandler),
 ):
     new_path = process_image_and_save(
         handler,
@@ -230,13 +259,14 @@ async def blur(
     }
     return templates.TemplateResponse("editor.html", context)
 
+
 @router.post("/download")
 async def download_image(
     background_tasks: BackgroundTasks,
     image_id: str = Form(...),
     format: str = Form("jpeg"),
     quality: int = Form(95),
-    handler: ImageFileHandler = Depends(ImageFileHandler)
+    handler: ImageFileHandler = Depends(ImageFileHandler),
 ):
     ext = f".{format.lower()}"
     download_id = f"{uuid.uuid4()}{ext}"
@@ -247,4 +277,6 @@ async def download_image(
 
     background_tasks.add_task(cleanup_file, download_path)
 
-    return FileResponse(download_path, media_type=f"image/{format}", filename=f"edited_image{ext}")
+    return FileResponse(
+        download_path, media_type=f"image/{format}", filename=f"edited_image{ext}"
+    )

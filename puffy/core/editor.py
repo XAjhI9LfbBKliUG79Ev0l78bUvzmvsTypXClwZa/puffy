@@ -1,10 +1,12 @@
 from __future__ import annotations
+import copy
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
 from .types import ImageArray
 from . import io, transform, adjustments, effects
+
 
 @dataclass
 class ImageEditor:
@@ -24,11 +26,15 @@ class ImageEditor:
         io.save_image(self.image, path, quality=quality)
         return self
 
-    def resize(self, width: int, height: int, interpolation: str = "bicubic") -> ImageEditor:
+    def resize(
+        self, width: int, height: int, interpolation: str = "bicubic"
+    ) -> ImageEditor:
         self._image = transform.resize(self.image, width, height, interpolation)
         return self
 
-    def rotate(self, angle: float, center: Optional[tuple[int, int]] = None) -> ImageEditor:
+    def rotate(
+        self, angle: float, center: Optional[tuple[int, int]] = None
+    ) -> ImageEditor:
         self._image = transform.rotate(self.image, angle, center)
         return self
 
@@ -40,15 +46,23 @@ class ImageEditor:
         self._image = transform.flip(self.image, horizontal, vertical)
         return self
 
-    def adjust_brightness_contrast(self, brightness: int = 0, contrast: float = 1.0) -> ImageEditor:
-        self._image = adjustments.adjust_brightness_contrast(self.image, brightness, contrast)
+    def adjust_brightness_contrast(
+        self, brightness: int = 0, contrast: float = 1.0
+    ) -> ImageEditor:
+        self._image = adjustments.adjust_brightness_contrast(
+            self.image, brightness, contrast
+        )
         return self
 
-    def adjust_color_balance(self, red: int = 0, green: int = 0, blue: int = 0) -> ImageEditor:
+    def adjust_color_balance(
+        self, red: int = 0, green: int = 0, blue: int = 0
+    ) -> ImageEditor:
         self._image = adjustments.adjust_color_balance(self.image, red, green, blue)
         return self
 
-    def add_noise(self, noise_type: str = "gaussian", intensity: float = 0.1) -> ImageEditor:
+    def add_noise(
+        self, noise_type: str = "gaussian", intensity: float = 0.1
+    ) -> ImageEditor:
         self._image = effects.add_noise(self.image, noise_type, intensity)
         return self
 
