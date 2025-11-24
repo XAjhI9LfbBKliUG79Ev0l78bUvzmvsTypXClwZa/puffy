@@ -20,3 +20,6 @@ dev = [
     "python-lsp-server>=1.13.1",
     "ruff>=0.14.3",
 ]
+
+[tool.setuptools.packages.find]
+include = ["puffy*"]
